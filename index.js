@@ -6,7 +6,6 @@ import Airtable from 'airtable';
 
 config(); // Load .env variables
 
-// ENV VARS
 const {
   TMAS_API_KEY,
   TMAS_LOCATION_ID,
@@ -19,9 +18,13 @@ if (!TMAS_API_KEY || !TMAS_LOCATION_ID || !AIRTABLE_API_KEY || !AIRTABLE_BASE_ID
   throw new Error('Missing one or more environment variables. Please check your .env file.');
 }
 
-// Build TMAS API URL for yesterday
-const yesterday = new Date(Date.now() - 86400000); // 86400000 ms = 1 day
-const dateStr = `${yesterday.getMonth() + 1}/${yesterday.getDate()}/${yesterday.getFullYear()}`;
+// Calculate yesterday in local (Mountain) time
+const now = new Date();
+const localOffset = now.getTimezoneOffset() * 60000; // ms offset
+const localTime = new Date(now - localOffset);
+localTime.setDate(localTime.getDate() - 1); // subtract one day
+const dateStr = `${localTime.getMonth() + 1}/${localTime.getDate()}/${localTime.getFullYear()}`;
+
 const url = `https://www.smssoftware.net/tmas/manTrafExp?fromDate=${dateStr}&toDate=${dateStr}&interval=0&hours=0&reqType=tdd&apiKey=${TMAS_API_KEY}&locationId=${TMAS_LOCATION_ID}`;
 
 console.log('🟢 Script started...');
@@ -35,7 +38,6 @@ try {
   const records = json.TRAFFIC?.data || [];
   if (!records.length) throw new Error('No traffic data returned.');
 
-  // Summarize
   const summary = records.reduce(
     (acc, r) => {
       const { trafficIn = '0', trafficOut = '0' } = r['$'];
@@ -49,7 +51,6 @@ try {
 
   console.log('📊 Daily Summary:', summary);
 
-  // Upload to Airtable
   const base = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(AIRTABLE_BASE_ID);
 
   await base(AIRTABLE_TABLE_NAME).create([
