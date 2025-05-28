@@ -17,13 +17,13 @@ if (!TMAS_API_KEY || !TMAS_LOCATION_ID || !AIRTABLE_API_KEY || !AIRTABLE_BASE_ID
   throw new Error('Missing environment variables.');
 }
 
-// Get yesterday in local time
-const yesterday = new Date();
-yesterday.setDate(yesterday.getDate() - 1);
+// Use Mountain Time (America/Denver) for accurate "yesterday"
+const tz = 'America/Denver';
+const nowInMT = new Date(new Date().toLocaleString('en-US', { timeZone: tz }));
+nowInMT.setDate(nowInMT.getDate() - 1);
 
-// Format dates
-const mdy = yesterday.toLocaleDateString('en-US'); // MM/DD/YYYY for API
-const iso = yesterday.toISOString().split('T')[0]; // YYYY-MM-DD for Airtable
+const mdy = nowInMT.toLocaleDateString('en-US', { timeZone: tz }); // MM/DD/YYYY for TMAS API
+const iso = nowInMT.toLocaleDateString('en-CA', { timeZone: tz }); // YYYY-MM-DD for Airtable
 
 const url = `https://www.smssoftware.net/tmas/manTrafExp?fromDate=${mdy}&toDate=${mdy}&interval=0&hours=0&reqType=tdd&apiKey=${TMAS_API_KEY}&locationId=${TMAS_LOCATION_ID}`;
 
@@ -54,7 +54,7 @@ console.log('🌐 Fetching:', url);
 
     const base = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(AIRTABLE_BASE_ID);
 
-    // Check for existing record by date using IS_SAME for date fields
+    // Check for existing record with the same date
     const existing = await base(AIRTABLE_TABLE_NAME).select({
       filterByFormula: `IS_SAME({Date}, '${summary.date}', 'day')`,
       maxRecords: 1,
