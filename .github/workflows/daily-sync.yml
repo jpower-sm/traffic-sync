@@ -1,0 +1,33 @@
+name: Daily Traffic Sync
+
+on:
+  schedule:
+    - cron: '0 13 * * *'  # Runs at 7AM MT (13:00 UTC) daily
+  workflow_dispatch:       # Allows manual run from GitHub interface
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v4
+
+      - name: 🟢 Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🔐 Inject environment variables
+        run: |
+          echo "TMAS_API_KEY=${{ secrets.TMAS_API_KEY }}" >> .env
+          echo "TMAS_LOCATION_ID=${{ secrets.TMAS_LOCATION_ID }}" >> .env
+          echo "AIRTABLE_API_KEY=${{ secrets.AIRTABLE_API_KEY }}" >> .env
+          echo "AIRTABLE_BASE_ID=${{ secrets.AIRTABLE_BASE_ID }}" >> .env
+          echo "AIRTABLE_TABLE_NAME=${{ secrets.AIRTABLE_TABLE_NAME }}" >> .env
+
+      - name: 🚀 Run daily sync
+        run: node index.js
