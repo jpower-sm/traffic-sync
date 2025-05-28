@@ -23,8 +23,7 @@ yesterday.setDate(yesterday.getDate() - 1);
 
 // Format dates
 const mdy = yesterday.toLocaleDateString('en-US'); // MM/DD/YYYY for API
-const iso = yesterday.toISOString().split('T')[0]; // YYYY-MM-DD for Airtable
-
+const iso = yesterday.toLocaleDateString('en-CA'); // Local YYYY-MM-DD (like '2025-05-26')
 const url = `https://www.smssoftware.net/tmas/manTrafExp?fromDate=${mdy}&toDate=${mdy}&interval=0&hours=0&reqType=tdd&apiKey=${TMAS_API_KEY}&locationId=${TMAS_LOCATION_ID}`;
 
 console.log('🟢 Script started...');
